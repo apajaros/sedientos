@@ -2,6 +2,11 @@
     <gmap-map
       :center="mapcenter"
       :zoom="15"
+      :options="{clickableIcons: false,
+      fullscreenControl: false,
+      mapTypeControl: false,
+      streetViewControl: false}"
+      @bounds_changed="boundsChanged($event)"
       ref="map"
     >
       <gmap-marker
@@ -18,6 +23,7 @@
 <script>
   import * as VueGoogleMaps from 'vue2-google-maps'
   import Vue from 'vue'
+  import places from '../assets/places.js'
 
   Vue.use(VueGoogleMaps, {
     load: {
@@ -29,18 +35,20 @@
     data () {
       return {
         mapcenter: {lat: 40.4517299, lng: -3.6822692},
-        markers: [
-          {
-            position: {lat: 40.4510299, lng: -3.6853692}
-          }, {
-            position: {lat: 40.4420299, lng: -3.6973292}
-          }
-        ]
+        markers: []
       }
     },
     methods: {
-      recenter: function (coord) {
+      boundsChanged ($bounds) {
+        this.getPlaces($bounds)
+      },
+      recenter (coord) {
         this.mapcenter = coord
+      },
+      getPlaces (bounds) {
+        this.markers = places.filter(function (place) {
+          return bounds.contains(place.position)
+        })
       }
     },
     watch: {
