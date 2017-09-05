@@ -61,4 +61,8 @@
   #sedientos .container {
     padding: 0;
   }
+
+  body {
+    overflow: hidden;
+  }
 </style>
