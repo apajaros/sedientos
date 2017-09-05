@@ -1,4 +1,5 @@
 <template>
+  <div>
     <gmap-map
       :center="mapcenter"
       :zoom="15"
@@ -9,21 +10,23 @@
       @bounds_changed="boundsChanged($event)"
       ref="map"
     >
-      <gmap-marker
+      <place-marker
         :key="index"
         v-for="(m, index) in markers"
         :position="m.position"
-        :clickable="true"
-        :draggable="false"
-        @click="recenter(m.position)"
-      ></gmap-marker>
+        :info="m"
+        @click="onClick"
+      ></place-marker>
     </gmap-map>
+    <router-view></router-view>
+  </div>
 </template>
 
 <script>
   import * as VueGoogleMaps from 'vue2-google-maps'
   import Vue from 'vue'
   import places from '../assets/places.js'
+  import PlaceMarker from '@/components/PlaceMarker.vue'
 
   Vue.use(VueGoogleMaps, {
     load: {
@@ -38,6 +41,14 @@
         markers: []
       }
     },
+    components: {
+      'place-marker': PlaceMarker
+    },
+    created () {
+      for (const place of places) {
+        this.$store.commit('ADD_PLACE', place)
+      }
+    },
     methods: {
       boundsChanged ($bounds) {
         this.getPlaces($bounds)
@@ -46,9 +57,15 @@
         this.mapcenter = coord
       },
       getPlaces (bounds) {
-        this.markers = places.filter(function (place) {
-          return bounds.contains(place.position)
-        })
+        let visibleMarkers = []
+        for (const key in this.$store.state.places) {
+          const place = this.$store.state.places[key]
+          if (bounds.contains(place.position)) visibleMarkers.push(place)
+        }
+        this.markers = visibleMarkers
+      },
+      onClick ($event) {
+        this.$router.push({name: 'place', params: {id: $event.info.id}})
       }
     },
     watch: {
