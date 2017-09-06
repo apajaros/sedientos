@@ -30,12 +30,6 @@
         <v-toolbar temporary floating id="main-toolbar">
           <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
           <v-text-field prepend-icon="search" hide-details single-line></v-text-field>
-            <v-btn icon>
-              <v-icon>my_location</v-icon>
-            </v-btn>
-            <v-btn icon>
-              <v-icon>more_vert</v-icon>
-            </v-btn>
         </v-toolbar>
         <router-view></router-view>
       </v-container>
