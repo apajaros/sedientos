@@ -27,7 +27,7 @@
     </v-navigation-drawer>
     <main>
       <v-container fluid>
-        <v-toolbar temporary floating class="elevation-1">
+        <v-toolbar temporary floating id="main-toolbar">
           <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
           <v-text-field prepend-icon="search" hide-details single-line></v-text-field>
             <v-btn icon>
@@ -64,11 +64,18 @@
 <style lang="stylus">
   @import './stylus/main'
 
+  body {
+    overflow: hidden;
+  }
+
   #sedientos .container {
     padding: 0;
   }
 
-  body {
-    overflow: hidden;
+  #main-toolbar {
+    z-index: 1;
+    /** I'm sorry, but vuetify injects "margin-top:0" in the element style **/
+    margin: 16px !important; 
   }
+
 </style>
