@@ -25,12 +25,18 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar temporary dark>
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-      <v-toolbar-title>Sedientos</v-toolbar-title>
-    </v-toolbar>
     <main>
       <v-container fluid>
+        <v-toolbar temporary floating class="elevation-1">
+          <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+          <v-text-field prepend-icon="search" hide-details single-line></v-text-field>
+            <v-btn icon>
+              <v-icon>my_location</v-icon>
+            </v-btn>
+            <v-btn icon>
+              <v-icon>more_vert</v-icon>
+            </v-btn>
+        </v-toolbar>
         <router-view></router-view>
       </v-container>
     </main>

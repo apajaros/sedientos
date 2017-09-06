@@ -1,5 +1,4 @@
 <template>
-  <div>
     <gmap-map
       :center="mapcenter"
       :zoom="15"
@@ -17,9 +16,8 @@
         :info="m"
         @click="onClick"
       ></place-marker>
-    </gmap-map>
     <router-view></router-view>
-  </div>
+    </gmap-map>
 </template>
 
 <script>
@@ -79,11 +77,15 @@
 
 <style scoped>
   gmap-map {
-    width:100%;
-    height: calc(100vh - 64px);
-    display: block;
+    width: 100%;
+    height: 100%;
   }
+
   .vue-map-container {
-    height: calc(100vh - 64px);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
   }
 </style>
