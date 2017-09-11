@@ -16,6 +16,7 @@
         :info="m"
         @click="onClick"
       ></place-marker>
+      <user-position :position="userPosition"></user-position>
     <router-view></router-view>
     </gmap-map>
 </template>
@@ -25,27 +26,49 @@
   import Vue from 'vue'
   import places from '../assets/places.js'
   import PlaceMarker from '@/components/PlaceMarker.vue'
+  import UserPosition from '@/components/userPosition.vue'
+  import VueGeolocation from '@/components/Geolocation'
 
   Vue.use(VueGoogleMaps, {
     load: {
       key: 'AIzaSyAowE4dyOwEtX8K6ugzA1sXmOLO5pzARgI'
     }
   })
+  Vue.use(VueGeolocation)
 
   export default {
     data () {
       return {
         mapcenter: {lat: 40.4517299, lng: -3.6822692},
-        markers: []
+        markers: [],
+        userPosition: {}
       }
     },
     components: {
-      'place-marker': PlaceMarker
+      'place-marker': PlaceMarker,
+      'user-position': UserPosition
     },
     created () {
       for (const place of places) {
         this.$store.commit('ADD_PLACE', place)
       }
+      this.$getLocation().then(position => {
+        let userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        }
+        this.userPosition = position
+        this.recenter(userLocation)
+      }).catch(
+      (reason) => {
+        console.log('geolocation rejected (' + reason + ') here.')
+      })
+      this.$watchLocation((position) => {
+        console.log(position)
+      },
+      (reason) => {
+        console.log('error getting location: ' + reason)
+      })
     },
     methods: {
       boundsChanged ($bounds) {
