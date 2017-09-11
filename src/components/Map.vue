@@ -26,7 +26,7 @@
   import Vue from 'vue'
   import places from '../assets/places.js'
   import PlaceMarker from '@/components/PlaceMarker.vue'
-  import UserPosition from '@/components/userPosition.vue'
+  import UserPosition from '@/components/UserPosition.vue'
   import VueGeolocation from '@/components/Geolocation'
 
   Vue.use(VueGoogleMaps, {
