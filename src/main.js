@@ -12,6 +12,10 @@ Vue.config.productionTip = false
 import VueResource from 'vue-resource'
 Vue.use(VueResource)
 
+/* Auth plugin */
+import Auth from './auth'
+Vue.use(Auth)
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
