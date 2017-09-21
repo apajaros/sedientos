@@ -12,7 +12,7 @@
       <place-marker
         :key="index"
         v-for="(m, index) in markers"
-        :position="m.position"
+        :position="m.location"
         :info="m"
         @click="onClick"
       ></place-marker>
@@ -24,8 +24,6 @@
 <script>
   import * as VueGoogleMaps from 'vue2-google-maps'
   import Vue from 'vue'
-  import places from '../assets/places.js'
-  import PlaceMarker from '@/components/PlaceMarker.vue'
   import UserPosition from '@/components/UserPosition.vue'
   import VueGeolocation from '@/components/Geolocation'
 
@@ -49,9 +47,14 @@
       'user-position': UserPosition
     },
     created () {
-      for (const place of places) {
-        this.$store.commit('ADD_PLACE', place)
-      }
+      this.$http.get('http://localhost:8080/api/places').then((response) => {
+        for (const place of response.body._embedded.places) {
+          // Add id for internal routing
+          const linkParts = place._links.self.href.split('/')
+          place.id = linkParts[linkParts.length - 1]
+          this.$store.commit('ADD_PLACE', place)
+        }
+      })
       this.$getLocation().then(position => {
         let userLocation = {
           lat: position.coords.latitude,
@@ -81,7 +84,7 @@
         let visibleMarkers = []
         for (const key in this.$store.state.places) {
           const place = this.$store.state.places[key]
-          if (bounds.contains(place.position)) visibleMarkers.push(place)
+          if (bounds.contains(place.location)) visibleMarkers.push(place)
         }
         this.markers = visibleMarkers
       },

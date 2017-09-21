@@ -21,7 +21,7 @@
         <v-card-title>
           <h3 class="headline mb-0">
             {{ placeInfo.name }} | 
-            <span>Caña: {{ placeInfo.price | formatPrice }}</span>
+            <span>Caña: {{ placeInfo.beers[0].price | formatPrice }}</span>
             <star-display :stars="stars"></star-display> <template v-if="placeInfo.reviews && placeInfo.reviews.length">({{placeInfo.reviews.length}})</template>
           </h3>
         </v-card-title>
@@ -31,13 +31,13 @@
           <v-subheader v-if="placeInfo.reviews && placeInfo.reviews.length">Opiniones</v-subheader>
             <template v-for="(review, index) in placeInfo.reviews">
               <v-divider></v-divider>
-              <v-list-tile avatar @click="" download :key="index">
+              <v-list-tile avatar @click="" :key="index">
                 <v-list-tile-avatar>
                   <v-icon class="indigo--text">account_circle</v-icon>
                   <!-- <img v-bind:src="item.avatar"></v-list-tile-avatar> -->
                 </v-list-tile-avatar>
                 <v-list-tile-content>
-                  <v-list-tile-title>{{ review.user_name }} <star-display :stars="review.stars"></star-display></v-list-tile-title>
+                  <v-list-tile-title>{{ review.user.name }} <star-display :stars="review.stars"></star-display></v-list-tile-title>
                   <v-list-tile-sub-title v-html="review.body"></v-list-tile-sub-title>
                 </v-list-tile-content>
               </v-list-tile>
@@ -126,7 +126,5 @@
     transition-duration: 1s;
     transition-timing-function: ease-out;
   }
-
-
 
 </style>
