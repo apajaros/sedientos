@@ -24,8 +24,9 @@
 <script>
   import * as VueGoogleMaps from 'vue2-google-maps'
   import Vue from 'vue'
-  import UserPosition from '@/components/UserPosition.vue'
+  import UserPosition from '@/components/UserPosition'
   import VueGeolocation from '@/components/Geolocation'
+  import PlaceMarker from '@/components/PlaceMarker'
 
   Vue.use(VueGoogleMaps, {
     load: {
@@ -33,6 +34,16 @@
     }
   })
   Vue.use(VueGeolocation)
+
+  var config = require('../../config')
+  let apiUrl
+  if (process.env.NODE_ENV === 'development') {
+    apiUrl = JSON.parse(config.dev.env.API_URL)
+  } else {
+    apiUrl = JSON.parse(config.prod.env.API_URL)
+  }
+  console.log('read URL')
+  console.log(apiUrl)
 
   export default {
     data () {
@@ -47,7 +58,7 @@
       'user-position': UserPosition
     },
     created () {
-      this.$http.get('http://localhost:8080/api/places').then((response) => {
+      this.$http.get(apiUrl + 'places?size=100').then((response) => {
         for (const place of response.body._embedded.places) {
           // Add id for internal routing
           const linkParts = place._links.self.href.split('/')

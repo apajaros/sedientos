@@ -20,13 +20,17 @@
           </v-layout>
         <v-card-title>
           <h3 class="headline mb-0">
-            {{ placeInfo.name }} | 
-            <span>Caña: {{ placeInfo.beers[0].price | formatPrice }}</span>
+            {{ placeInfo.name }}
+            <span v-if="placeInfo.beers"> | Caña: {{ placeInfo.beers[0].price | formatPrice }}</span>
             <star-display :stars="stars"></star-display> <template v-if="placeInfo.reviews && placeInfo.reviews.length">({{placeInfo.reviews.length}})</template>
           </h3>
         </v-card-title>
         <v-card-text v-show="showFull">
-          {{   placeInfo.address }}
+          <p v-if="placeInfo.address">{{   placeInfo.address }}</p>
+          <p v-if="placeInfo.phoneNumber">{{   placeInfo.phoneNumber }}</p>
+          <p v-if="placeInfo.website">{{   placeInfo.website }}</p>
+          <p v-if="placeInfo.email">{{   placeInfo.email }}</p>
+          <p v-if="placeInfo.openingHours">{{   placeInfo.openingHours }}</p>
           <v-list>
           <v-subheader v-if="placeInfo.reviews && placeInfo.reviews.length">Opiniones</v-subheader>
             <template v-for="(review, index) in placeInfo.reviews">
