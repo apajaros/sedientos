@@ -37,18 +37,11 @@
 
   var config = require('../../config')
   let apiUrl
-  console.log(config)
-  console.log(process)
   if (process.env.NODE_ENV === 'development') {
-    console.log('we are in dev')
     apiUrl = JSON.parse(config.dev.env.API_URL)
   } else {
-    console.log('parse JSON config')
-    console.log(config)
     apiUrl = JSON.parse(config.build.env.API_URL)
   }
-  console.log('read URL')
-  console.log(apiUrl)
 
   export default {
     data () {
@@ -63,14 +56,7 @@
       'user-position': UserPosition
     },
     created () {
-      this.$http.get(apiUrl + 'places?size=100').then((response) => {
-        for (const place of response.body._embedded.places) {
-          // Add id for internal routing
-          const linkParts = place._links.self.href.split('/')
-          place.id = linkParts[linkParts.length - 1]
-          this.$store.commit('ADD_PLACE', place)
-        }
-      })
+      this.fetchPlaces(this.mapcenter.lat, this.mapcenter.lng)
       this.$getLocation().then(position => {
         let userLocation = {
           lat: position.coords.latitude,
@@ -91,12 +77,13 @@
     },
     methods: {
       boundsChanged ($bounds) {
-        this.getPlaces($bounds)
+        this.paintSavedPlaces($bounds)
       },
       recenter (coord) {
+        this.fetchPlaces(coord.lat, coord.lng)
         this.mapcenter = coord
       },
-      getPlaces (bounds) {
+      paintSavedPlaces (bounds) {
         let visibleMarkers = []
         for (const key in this.$store.state.places) {
           const place = this.$store.state.places[key]
@@ -106,6 +93,19 @@
       },
       onClick ($event) {
         this.$router.push({name: 'place', params: {id: $event.info.id}})
+      },
+      fetchPlaces (lat, lng) {
+        this.$http.get(apiUrl + 'places/search/findByLocationNear?point=' + lat + ',' + lng + '&max_distance=1km').then((response) => {
+          for (const place of response.body._embedded.places) {
+            // Add id for internal routing
+            const linkParts = place._links.self.href.split('/')
+            place.id = linkParts[linkParts.length - 1]
+            this.$store.commit('ADD_PLACE', place)
+          }
+          if (this.$refs.map && this.$refs.map.$mapObject) {
+            this.paintSavedPlaces(this.$refs.map.$mapObject.getBounds())
+          }
+        })
       }
     },
     watch: {
