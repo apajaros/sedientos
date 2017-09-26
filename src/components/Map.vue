@@ -45,7 +45,7 @@
   } else {
     console.log('parse JSON config')
     console.log(config)
-    apiUrl = JSON.parse(config.prod.env.API_URL)
+    apiUrl = JSON.parse(config.build.env.API_URL)
   }
   console.log('read URL')
   console.log(apiUrl)

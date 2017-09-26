@@ -37,7 +37,7 @@ var oktaAuth = new OktaAuth({
   url: 'https://dev-723162.oktapreview.com',
   clientId: '0oac1a92m9FJX1gnI0h7',
   issuer: 'https://dev-723162.oktapreview.com/oauth2/default',
-  redirectUri: location.host + '/callback'
+  redirectUri: location.origin + '/callback'
 })
 
 /**
