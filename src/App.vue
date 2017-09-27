@@ -63,7 +63,7 @@
 
 
 <script>
-  import { EventBus } from './components/EventBus.js'
+  import { EventBus } from '@/components/EventBus'
   export default {
     data () {
       return {

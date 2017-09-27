@@ -41,7 +41,7 @@
   import UserPosition from '@/components/UserPosition'
   import VueGeolocation from '@/components/Geolocation'
   import PlaceMarker from '@/components/PlaceMarker'
-  import { EventBus } from '@/components/EventBus.js'
+  import { EventBus } from '@/components/EventBus'
 
   Vue.use(VueGoogleMaps, {
     load: {
