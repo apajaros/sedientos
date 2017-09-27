@@ -1,6 +1,6 @@
 <template>
     <gmap-map
-      :center="mapcenter"
+      :center="mapCenter"
       :zoom="15"
       :options="{clickableIcons: false,
       fullscreenControl: false,
@@ -46,17 +46,20 @@
   export default {
     data () {
       return {
-        mapcenter: {lat: 40.4517299, lng: -3.6822692},
         markers: [],
         userPosition: {}
+      }
+    },
+    computed: {
+      mapCenter () {
+        return this.$store.state.center
       }
     },
     components: {
       'place-marker': PlaceMarker,
       'user-position': UserPosition
     },
-    created () {
-      this.fetchPlaces(this.mapcenter.lat, this.mapcenter.lng)
+    mounted () {
       this.$getLocation().then(position => {
         let userLocation = {
           lat: position.coords.latitude,
@@ -67,6 +70,7 @@
       }).catch(
       (reason) => {
         console.log('geolocation rejected (' + reason + ') here.')
+        this.recenter(this.mapCenter)
       })
       this.$watchLocation((position) => {
         console.log(position)
@@ -81,7 +85,7 @@
       },
       recenter (coord) {
         this.fetchPlaces(coord.lat, coord.lng)
-        this.mapcenter = coord
+        this.$store.commit('UPDATE_CENTER', coord)
       },
       paintSavedPlaces (bounds) {
         let visibleMarkers = []

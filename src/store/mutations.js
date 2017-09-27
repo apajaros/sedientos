@@ -33,3 +33,7 @@ export const CLEAR_ALL_DATA = (state) => {
 export const ADD_PLACE = (state, place) => {
   state.places[place.id] = place
 }
+
+export const UPDATE_CENTER = (state, position) => {
+  state.center = position
+}
