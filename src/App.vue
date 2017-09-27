@@ -47,7 +47,13 @@
       <v-container fluid>
         <v-toolbar temporary floating id="main-toolbar">
           <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-          <v-text-field prepend-icon="search" hide-details single-line></v-text-field>
+          <!-- <v-text-field prepend-icon="search" hide-details single-line></v-text-field> -->
+          <v-btn icon @click.stop="centerOnUserLocation">
+            <v-icon>my_location</v-icon>
+          </v-btn>
+          <v-btn icon @click.stop="searchHere">
+            <v-icon>search</v-icon>
+          </v-btn>
         </v-toolbar>
         <router-view></router-view>
       </v-container>
@@ -57,6 +63,7 @@
 
 
 <script>
+  import { EventBus } from './components/EventBus.js'
   export default {
     data () {
       return {
@@ -76,6 +83,12 @@
       },
       logout () {
         this.$auth.logout()
+      },
+      centerOnUserLocation () {
+        EventBus.$emit('recenter')
+      },
+      searchHere () {
+        EventBus.$emit('search')
       }
     },
     computed: {

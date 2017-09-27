@@ -1,4 +1,17 @@
 <template>
+  <div>
+    <v-snackbar
+        :success="context === 'success'"
+        :info="context === 'info'"
+        :error="context === 'error'"
+        :absolute="true"
+        :top="true"
+        v-model="snackbar"
+    >
+      {{ snackbarMessage }}
+      <v-progress-circular indeterminate class="amber--text" v-show="loading"></v-progress-circular>
+      <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
+    </v-snackbar>
     <gmap-map
       :center="mapCenter"
       :zoom="15"
@@ -19,6 +32,7 @@
       <user-position :position="userPosition"></user-position>
     <router-view></router-view>
     </gmap-map>
+  </div>
 </template>
 
 <script>
@@ -27,6 +41,7 @@
   import UserPosition from '@/components/UserPosition'
   import VueGeolocation from '@/components/Geolocation'
   import PlaceMarker from '@/components/PlaceMarker'
+  import { EventBus } from '@/components/EventBus.js'
 
   Vue.use(VueGoogleMaps, {
     load: {
@@ -46,13 +61,13 @@
   export default {
     data () {
       return {
+        mapCenter: {lat: 40.4517299, lng: -3.6822692},
         markers: [],
-        userPosition: {}
-      }
-    },
-    computed: {
-      mapCenter () {
-        return this.$store.state.center
+        userPosition: {},
+        snackbar: false,
+        context: 'info',
+        loading: false,
+        snackbarMessage: ''
       }
     },
     components: {
@@ -67,24 +82,47 @@
         }
         this.userPosition = position
         this.recenter(userLocation)
+        this.fetchPlaces(userLocation)
       }).catch(
       (reason) => {
         console.log('geolocation rejected (' + reason + ') here.')
-        this.recenter(this.mapCenter)
+        this.mapCenter = this.$store.state.center
+        this.fetchPlaces(this.mapCenter)
       })
       this.$watchLocation((position) => {
         console.log(position)
+        let userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        }
+        this.userPosition = position
+        this.recenter(userLocation)
+        this.fetchPlaces(userLocation)
       },
       (reason) => {
         console.log('error getting location: ' + reason)
+      })
+
+      EventBus.$on('recenter', () => {
+        let userLocation = {
+          lat: this.userPosition.coords.latitude,
+          lng: this.userPosition.coords.longitude
+        }
+        this.recenter(userLocation)
+      })
+      EventBus.$on('search', () => {
+        this.fetchPlacesInView()
       })
     },
     methods: {
       boundsChanged ($bounds) {
         this.paintSavedPlaces($bounds)
+        const center = this.$refs.map.$mapObject.center
+        this.$store.commit('UPDATE_CENTER', {lat: center.lat(), lng: center.lng()})
       },
       recenter (coord) {
-        this.fetchPlaces(coord.lat, coord.lng)
+        this.mapCenter = coord
+        this.$refs.map.panTo(coord)
         this.$store.commit('UPDATE_CENTER', coord)
       },
       paintSavedPlaces (bounds) {
@@ -98,18 +136,50 @@
       onClick ($event) {
         this.$router.push({name: 'place', params: {id: $event.info.id}})
       },
-      fetchPlaces (lat, lng) {
-        this.$http.get(apiUrl + 'places/search/findByLocationNear?point=' + lat + ',' + lng + '&max_distance=1km').then((response) => {
-          for (const place of response.body._embedded.places) {
-            // Add id for internal routing
-            const linkParts = place._links.self.href.split('/')
-            place.id = linkParts[linkParts.length - 1]
-            this.$store.commit('ADD_PLACE', place)
+      fetchPlaces (coord) {
+        this.fetchFromApi(apiUrl + 'places/search/findByLocationNear?point=' + coord.lat + ',' + coord.lng + '&max_distance=1km')
+      },
+      fetchPlacesInView () {
+        if (this.$refs.map) {
+          if (this.$refs.map.$mapObject.zoom < 14) {
+            this.context = 'info'
+            this.loading = false
+            this.snackbarMessage = 'Please, search in a smaller area'
+            this.snackbar = true
+            return
           }
-          if (this.$refs.map && this.$refs.map.$mapObject) {
-            this.paintSavedPlaces(this.$refs.map.$mapObject.getBounds())
-          }
+          const bounds = this.$refs.map.$mapObject.getBounds()
+          this.fetchFromApi(apiUrl + 'places/search/findByLocationWithin?box=' + bounds.b.b + ',' + bounds.f.b + ',' + bounds.b.f + ',' + bounds.f.f)
+        }
+      },
+      fetchFromApi (uri) {
+        this.context = 'info'
+        this.loading = true
+        this.snackbarMessage = 'loading'
+        this.snackbar = true
+
+        this.$http.get(uri)
+        .then((response) => {
+          this.handleApiPlacesResponse(response)
+          this.context = 'success'
+          this.snackbar = false
+        }).catch((error) => {
+          console.log(error)
+          this.context = 'error'
+          this.loading = false
+          this.snackbarMessage = 'Error while loading data!'
         })
+      },
+      handleApiPlacesResponse (response) {
+        for (const place of response.body._embedded.places) {
+          // Add id for internal routing
+          const linkParts = place._links.self.href.split('/')
+          place.id = linkParts[linkParts.length - 1]
+          this.$store.commit('ADD_PLACE', place)
+        }
+        if (this.$refs.map && this.$refs.map.$mapObject) {
+          this.paintSavedPlaces(this.$refs.map.$mapObject.getBounds())
+        }
       }
     },
     watch: {
