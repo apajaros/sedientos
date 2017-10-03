@@ -1,17 +1,5 @@
 <template>
   <div>
-    <v-snackbar
-        :success="context === 'success'"
-        :info="context === 'info'"
-        :error="context === 'error'"
-        :absolute="true"
-        :top="true"
-        v-model="snackbar"
-    >
-      {{ snackbarMessage }}
-      <v-progress-circular indeterminate class="amber--text" v-show="loading"></v-progress-circular>
-      <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
-    </v-snackbar>
     <gmap-map
       :center="mapCenter"
       :zoom="15"
@@ -29,8 +17,21 @@
         :info="m"
         @click="onClick"
       ></place-marker>
+      <div slot="visible">
+        <v-snackbar
+            :success="context === 'success'"
+            :info="context === 'info'"
+            :error="context === 'error'"
+            :absolute="true"
+            :top="true"
+            v-model="snackbar"
+        >
+          {{ snackbarMessage }}
+          <v-progress-circular indeterminate class="amber--text" v-show="loading"></v-progress-circular>
+          <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
+        </v-snackbar>
+      </div>
       <user-position :position="userPosition"></user-position>
-    <router-view></router-view>
     </gmap-map>
   </div>
 </template>
@@ -91,13 +92,7 @@
       })
       this.$watchLocation((position) => {
         console.log(position)
-        let userLocation = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        }
         this.userPosition = position
-        this.recenter(userLocation)
-        this.fetchPlaces(userLocation)
       },
       (reason) => {
         console.log('error getting location: ' + reason)
@@ -175,6 +170,10 @@
           // Add id for internal routing
           const linkParts = place._links.self.href.split('/')
           place.id = linkParts[linkParts.length - 1]
+          if (place.location.x) {
+            const location = {lat: place.location.y, lng: place.location.x}
+            place.location = location
+          }
           this.$store.commit('ADD_PLACE', place)
         }
         if (this.$refs.map && this.$refs.map.$mapObject) {

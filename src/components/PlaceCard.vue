@@ -1,6 +1,6 @@
 <template>
- <v-bottom-sheet v-model="showBottomDrawer" >
-  <v-layout row>
+ <div v-show="showBottomDrawer" id="place-card-container" v-bind:class="{fullheight:showFull}">
+  <v-layout row v-model="showBottomDrawer" class="myClass">
     <v-flex xs12 sm4>
       <v-card tile  class="place-card" @click.stop="onClick" v-touch="{up: () => slideUp(), down: () => slideDown()}">
           <v-layout column v-show="showFull">
@@ -31,30 +31,66 @@
           <p v-if="placeInfo.website">{{   placeInfo.website }}</p>
           <p v-if="placeInfo.email">{{   placeInfo.email }}</p>
           <p v-if="placeInfo.openingHours">{{   placeInfo.openingHours }}</p>
-          <v-list>
           <v-subheader v-if="placeInfo.reviews && placeInfo.reviews.length">Opiniones</v-subheader>
-            <template v-for="(review, index) in placeInfo.reviews">
-              <v-divider></v-divider>
-              <v-list-tile avatar @click="" :key="index">
-                <v-list-tile-avatar>
-                  <v-icon class="indigo--text">account_circle</v-icon>
-                  <!-- <img v-bind:src="item.avatar"></v-list-tile-avatar> -->
-                </v-list-tile-avatar>
-                <v-list-tile-content>
-                  <v-list-tile-title>{{ review.user.name }} <star-display :stars="review.stars"></star-display></v-list-tile-title>
-                  <v-list-tile-sub-title v-html="review.body"></v-list-tile-sub-title>
-                </v-list-tile-content>
-              </v-list-tile>
-            </template>
-          </v-list>
+          <v-expansion-panel expand>
+            <v-expansion-panel-content v-for="(review, index) in placeInfo.reviews" :key="index" >
+              <div slot="header"><v-icon class="indigo--text">account_circle</v-icon> {{ review.user.name }} <star-display :stars="review.stars"></star-display></div>
+              <v-card>
+                <v-card-text v-html="review.body"></v-card-text>
+              </v-card>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+          <v-dialog v-model="reviewDialog" lazy absolute>
+            <v-btn slot="activator" small fixed bottom fab class="amber white--text"><v-icon>add</v-icon></v-btn>
+            <v-card class="write-review">
+              <v-card-title>
+                <div class="headline">Write a review</div>
+              </v-card-title>
+              <v-card-text v-if="!isAuthenticated">Please, <a href="#" @click="login">login</a> to send the review</v-card-text>
+              <form id="user-review" name="user-review" v-on:submit.prevent="">
+                <v-card-text>
+                  <star-rating :stars="userStars" v-on:updateStars="updateStars"></star-rating>
+                  <div class="warning" v-show="formError">Please, rate this place</div>
+                    <input type="hidden" name="stars" v-model="userStars">
+                    <v-text-field
+                      name="body"
+                      label="Tell us your experience"
+                      multi-line
+                      :disabled="!isAuthenticated"
+                    ></v-text-field>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn class="green--text darken-1" flat="flat" @click.native="reviewDialog = false">Cancel</v-btn>
+                  <v-btn type="submit" class="green--text darken-1" flat="flat" @click.native="sendReview" :disabled="!isAuthenticated">Send</v-btn>
+                </v-card-actions>
+              </form>
+            </v-card>
+          </v-dialog>
         </v-card-text>
       </v-card>
     </v-flex>
   </v-layout>
-</v-bottom-sheet>
+</div>
 </template>
 
 <script>
+  var StarRating = {
+    template: '<span class="stars amber--text text--lighten-1"><v-btn icon v-for="n in stars" :key="n" :class="[\'star--\' + n]" class="amber--text text--lighten-1" @click="updateStars(n)"><v-icon>star</v-icon></v-btn><v-btn icon v-for="n in (5 - stars)" :key="n+stars" :class="[\'star--\' + (n+stars)]" @click="updateStars(n+stars)"><v-icon>star_border</v-icon></v-btn></span>',
+    props: {
+      stars: {
+        type: Number,
+        validator: function (value) {
+          return value <= 6
+        }
+      }
+    },
+    methods: {
+      updateStars (number) {
+        this.$emit('updateStars', number)
+      }
+    }
+  }
   var StarDisplay = {
     template: '<span class="stars amber--text text--lighten-1" v-if="stars > 0"><i class="material-icons star" v-for="n in stars">star</i><i class="material-icons star" v-for="n in (5 - stars)">star_border</i></span>',
     props: {
@@ -69,18 +105,27 @@
       return {
         showBottomDrawer: true,
         showFull: false,
-        placeInfo: undefined
+        placeInfo: undefined,
+        reviewDialog: false,
+        userStars: 0,
+        formError: false
       }
     },
     components: {
-      'star-display': StarDisplay
+      'star-display': StarDisplay,
+      'star-rating': StarRating
     },
     created () {
       this.placeInfo = this.$store.state.places[this.$route.params.id]
     },
     watch: {
       '$route' (to, from) {
-        console.log('route change')
+        if (to.name === 'place' && from.name === 'place') {
+          this.placeInfo = this.$store.state.places[this.$route.params.id]
+          if (this.showFull === true) {
+            this.showFullCard()
+          }
+        }
       },
       showBottomDrawer () {
         this.goBackToMap()
@@ -90,20 +135,61 @@
       stars () {
         if (typeof this.placeInfo.stars === 'undefined') return 0
         return Math.floor(this.placeInfo.stars)
+      },
+      isAuthenticated () {
+        return this.$auth.isAuthenticated()
       }
     },
     methods: {
       slideUp () {
-        this.showFull = true
+        this.showFullCard()
       },
       onClick () {
-        this.showFull = true
+        this.showFullCard()
       },
       slideDown () {
         this.showFull = false
       },
       goBackToMap () {
         this.$router.push('/')
+      },
+      showFullCard () {
+        this.fetchFromApi(this.placeInfo._links.self.href)
+        this.showFull = true
+      },
+      fetchFromApi (uri) {
+        this.$http.get(uri)
+        .then((response) => {
+          this.handleApiPlaceResponse(response)
+        }).catch((error) => {
+          console.log(error)
+        })
+      },
+      handleApiPlaceResponse (response) {
+        this.placeInfo = response.body
+      },
+      updateStars (data) {
+        this.userStars = data
+        this.formError = false
+      },
+      sendReview () {
+        console.log('send review')
+        if (this.userStars < 1) {
+          this.formError = true
+          return
+        }
+        this.$http.post(this.placeInfo._links.self.href + '/reviews', {body: this.body, stars: this.userStars})
+        .then((response) => {
+          this.placeInfo.reviews = response.body._embedded.reviews
+          this.body = ''
+          this.userStars = 0
+          this.reviewDialog = false
+        }).catch((error) => {
+          console.log(error)
+        })
+      },
+      login () {
+        this.$auth.login()
       }
     },
     filters: {
@@ -123,12 +209,30 @@
     display: inline-block;
   }
 
+  .stars button {
+    margin: 0;
+  }
+
   .place-card {
+    pointer-events: all;
     cursor: pointer;
     overflow-y: auto;
-    transition-property: height;
-    transition-duration: 1s;
-    transition-timing-function: ease-out;
+  }
+
+  #place-card-container.fullheight .place-card {
+    height: 100vh !important;
+  }
+
+  #place-card-container { 
+    width: 100%;
+    position: absolute;
+    pointer-events: none;
+    bottom: 0;
+  }
+
+  #place-card-container.fullheight {
+    top: 0;
+    z-index: 1;
   }
 
 </style>

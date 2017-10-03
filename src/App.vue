@@ -55,6 +55,7 @@
             <v-icon>search</v-icon>
           </v-btn>
         </v-toolbar>
+        <sedientos-map></sedientos-map>
         <router-view></router-view>
       </v-container>
     </main>
@@ -64,6 +65,9 @@
 
 <script>
   import { EventBus } from '@/components/EventBus'
+  import Map from '@/components/Map'
+  import PlaceCard from '@/components/PlaceCard'
+
   export default {
     data () {
       return {
@@ -76,6 +80,10 @@
         right: true,
         title: 'Vuetify.js'
       }
+    },
+    components: {
+      'sedientos-map': Map,
+      'place-card': PlaceCard
     },
     methods: {
       login () {
