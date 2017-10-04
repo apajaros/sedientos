@@ -99,11 +99,13 @@
       })
 
       EventBus.$on('recenter', () => {
-        let userLocation = {
-          lat: this.userPosition.coords.latitude,
-          lng: this.userPosition.coords.longitude
+        if (this.userPosition.coords) {
+          let userLocation = {
+            lat: this.userPosition.coords.latitude,
+            lng: this.userPosition.coords.longitude
+          }
+          this.recenter(userLocation)
         }
-        this.recenter(userLocation)
       })
       EventBus.$on('search', () => {
         this.fetchPlacesInView()
